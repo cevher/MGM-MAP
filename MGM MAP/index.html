@@ -1,0 +1,296 @@
+<html>
+<head>
+  <meta charset=utf-8 />
+  <title>Meteoroloji 4. Bölge Müdürlüğü</title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+    <!-- Load Leaflet from CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
+    integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+    crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
+    integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
+    crossorigin=""></script>
+    <script type='text/javascript' src='markers.json'></script>
+
+    <!-- Load Esri Leaflet from CDN -->
+    <script src="https://unpkg.com/esri-leaflet@2.2.3/dist/esri-leaflet.js"
+    integrity="sha512-YZ6b5bXRVwipfqul5krehD9qlbJzc6KOGXYsDjU9HHXW2gK57xmWl2gU6nAegiErAqFXhygKIsWPKbjLPXVb2g=="
+    crossorigin=""></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+
+  <style>
+    body { margin:0; padding:0; }
+    #map { position: absolute; top:0; bottom:0; right:0; left:0; }
+    .info {
+        width:100%
+        position: fixed; top:0; left:0;
+    padding: 6px 8px;
+    /* display:none; */
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;}
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<script>
+  var gray = L.layerGroup();
+
+  // more than one service can be grouped together and passed to the control together
+  L.esri.basemapLayer("DarkGray").addTo(gray);
+  L.esri.basemapLayer("GrayLabels").addTo(gray);
+  
+
+  var map = L.map('map', {
+      center: [36.90812, 30.69556],
+      zoom: 8,
+      layers: [gray]
+  });
+
+  var baseLayers = {
+      "Grayscale": gray,
+      "Streetmap": L.esri.basemapLayer("Streets"),
+      "Pysicalmap": L.esri.basemapLayer("Physical")
+  };
+
+  // http://leafletjs.com/reference-1.0.3.html#control-layers
+  L.control.layers(baseLayers).addTo(map);
+
+  
+
+  map.on("click", function (e) {
+    console.log(e.latlng.lat, e.latlng.lng);
+})
+
+
+
+
+// 23 Eylül 2018 tarihi itibariyle Meteoroloji 4. bölge müdürlüğüne bağlı olan ve 
+// https://servis.mgm.gov.tr/api/merkezler/ililcesi?il=Antalya servisinde yer alan gözlem istasyonlarının listesi
+// Liste python ile pandas modülü kullanılarak oluşturuldu. Javascript object veya JSON olarak da hazırlanabilir
+// 
+var iller = [['Kaş', 36.2002, 29.6502, 90708],
+['Serik', 36.9517, 31.1189, 90712],
+['Demre', 36.2421, 29.979, 90713],
+['Döşemealtı', 36.9501, 30.6025, 90717],
+['Antalya Havalimanı', 36.9063, 30.799, 90721],
+['Akseki', 37.0468, 31.7971, 90702],
+['Alanya', 36.5507, 31.9803, 90703],
+['Elmalı', 36.7372, 29.9121, 90704],
+['Finike', 36.3024, 30.1458, 90705],
+['Gazipaşa', 36.2715, 32.3045, 90706],
+['Korkuteli', 37.0565, 30.191, 90709],
+['Kumluca', 36.3646, 30.2978, 90710],
+['Manavgat', 36.7895, 31.441, 90711],
+['İbradı', 37.0968, 31.5952, 90714],
+['Aksu', 36.9393, 30.898, 90716],
+['Gazipaşa Havalimanı', 36.2997, 32.3011, 90722],
+['Kemer', 36.5942, 30.5672, 90715],
+['Saklıkent Kayak Merkezi', 36.8389, 30.3325, 90720],
+['Kepez', 36.8851, 30.6828, 90718],
+['Gündoğmuş', 36.8043, 31.9979, 90707],
+['Konyaaltı', 36.84, 30.61, 90719],
+['Muratpaşa', 36.8851, 30.6828, 90701],
+['Aksu', 37.7999, 31.066, 93208],
+['Yenişarbademli', 37.7181, 31.4056, 93210],
+['Davraz Kayak Merkezi', 37.770052, 30.742508, 93214],
+['Atabey', 37.9549, 30.6396, 93211],
+['Eğirdir', 37.8377, 30.872, 93212],
+['Gelendost', 38.1242, 30.9986, 93213],
+['Merkez', 37.7848, 30.7679, 93201],
+['Keçiborlu', 37.9297, 30.2936, 93202],
+['Senirkent', 38.1047, 30.5577, 93203],
+['Uluborlu', 38.086, 30.4582, 93206],
+['Yalvaç', 38.283, 31.1778, 93207],
+['Gönen', 37.9264, 30.4869, 93209],
+['Süleyman Demirel HavalimanÄ±', 37.8554, 30.3683, 93215],
+['Sütçüler', 37.4939, 30.9721, 93204],
+['Şarkikaraağaç', 38.063, 31.3558, 93205],
+['Bucak', 37.493, 30.5617, 91511],
+['Kemer', 37.355, 30.0722, 91506],
+['Ağlasun', 37.6364, 30.5197, 91510],
+['Merkez', 37.722, 30.294, 91501],
+['Gölhisar', 37.1427, 29.526, 91502],
+['Tefenni', 37.3161, 29.7792, 91503],
+['Yeşilova', 37.5006, 29.7408, 91504],
+['Karamanlı', 37.4074, 29.8399, 91505],
+['Altınyayla', 37.0125, 29.545, 91507],
+['Çavdır', 37.1558, 29.7158, 91508],
+['Çeltikçi', 37.5642, 30.4425, 91509],
+['Yeşilova Salda Kayak Merkezi', 37.47, 29.67, 91512],
+['Menteşe', 37.2095, 28.3668, 94801],
+['Seydikemer', 36.7, 29.4117, 94806],
+['Kavaklıdere', 37.4508, 28.3622, 94808],
+['Dalaman Havalimanı', 36.7229, 28.7896, 94814],
+['Milas Bodrum Havalimanı', 37.251, 27.6573, 94815],
+['Fethiye', 36.6266, 29.1238, 94811],
+['Köyceğiz', 36.97, 28.6869, 94812],
+['Marmaris', 36.8395, 28.2452, 94813],
+['Yatağan', 37.3395, 28.1369, 94804],
+['Dalaman', 36.7719, 28.7986, 94805],
+['Bodrum Imsık HavalimanÄ±', 37.1402, 27.6697, 94816],
+['Bodrum', 37.0328, 27.4398, 94809],
+['Datça', 36.7083, 27.6919, 94810],
+['Milas', 37.3027, 27.7804, 94802],
+['Ula', 37.1303, 28.3803, 94803],
+['Ortaca', 36.8257, 28.7718, 94807]];
+
+var hadise = {
+    "AB" :"Az Bulutlu",
+    "PB" :"Parçalı Bulutlu",
+    "CB" :"Çok Bulutlu",
+    "HY" :"Hafif Yağmurlu",
+    "Y"  :"Yağmurlu",
+    "KY" :"Kuvvetli Yağmurlu",
+    "KKY":"Karla Karışık Yağmurlu",
+    "HKY":"Hafif Kar Yağışlı",
+    "K"  :"Kar Yağışlı",
+    "YKY":"Yoğun Kar Yağışlı",
+    "HSY":"Hafif Sağanak Yağışlı",
+    "SY" :"Sağanak Yağışlı",
+    "KSY":"Kuvvetli Sağanak Yağışlı",
+    "MSY":"Mevzi Sağanak Yağışlı",
+    "DY" :"Dolu",
+    "GSY":"Gökgürültülü Sağanak Yağışlı",
+    "KGY":"Kuvvetli Gökgürültülü Sağanak Yağışlı",
+    "SIS":"Sisli",
+    "PUS":"Puslu",
+    "DMN":"Dumanlı",
+    "KF" :"Toz veya Kum Fırtınası",
+    "R"  :"Rüzgarlı",
+    "GKR":"Güneyli Kuvvetli Rüzgar",
+    "KKR":"Kuzeyli Kuvvetli Rüzgar",
+    "SCK":"Sıcak",
+    "SGK":"Soğuk",
+    "HHY":"Yağışlı",
+}
+
+var hadiseresim= {
+    "AB"  : "https://www.mgm.gov.tr/Images_Sys/hadiseler/AB.svg",
+    "PB"  : "https://www.mgm.gov.tr/Images_Sys/hadiseler/PB.svg",
+    "CB"  : "https://www.mgm.gov.tr/Images_Sys/hadiseler/CB.svg",
+    "HY"  : "https://www.mgm.gov.tr/Images_Sys/hadiseler/HY.svg",
+    "Y"   : "https://www.mgm.gov.tr/Images_Sys/hadiseler/Y.svg",
+    "KY"  : "https://www.mgm.gov.tr/Images_Sys/hadiseler/KY.svg",
+    "KKY" : "https://www.mgm.gov.tr/Images_Sys/hadiseler/KKY.svg",
+    "HKY" : "https://www.mgm.gov.tr/Images_Sys/hadiseler/HKY.svg",
+    "K"   : "https://www.mgm.gov.tr/Images_Sys/hadiseler/K.svg",
+    "YKY" : "https://www.mgm.gov.tr/Images_Sys/hadiseler/YKY.svg",
+    "HSY" : "https://www.mgm.gov.tr/Images_Sys/hadiseler/HSY.svg",
+    "SY"  : "https://www.mgm.gov.tr/Images_Sys/hadiseler/SY.svg",
+    "KSY" : "https://www.mgm.gov.tr/Images_Sys/hadiseler/KSY.svg",
+    "MSY" : "https://www.mgm.gov.tr/Images_Sys/hadiseler/MSY.svg",
+    "DY"  : "https://www.mgm.gov.tr/Images_Sys/hadiseler/DY.svg",
+    "GSY" : "https://www.mgm.gov.tr/Images_Sys/hadiseler/GSY.svg",
+    "KGY" : "https://www.mgm.gov.tr/Images_Sys/hadiseler/KGY.svg",
+    "SIS" : "https://www.mgm.gov.tr/Images_Sys/hadiseler/SIS.svg",
+    "PUS" : "https://www.mgm.gov.tr/Images_Sys/hadiseler/PUS.svg",
+    "DMN" : "https://www.mgm.gov.tr/Images_Sys/hadiseler/DMN.svg",
+    "KF"  : "https://www.mgm.gov.tr/Images_Sys/hadiseler/KF.svg",
+    "R"   : "https://www.mgm.gov.tr/Images_Sys/hadiseler/R.svg",
+    "GKR" : "https://www.mgm.gov.tr/Images_Sys/hadiseler/GKR.svg",
+    "KKR" : "https://www.mgm.gov.tr/Images_Sys/hadiseler/KKR.svg",
+    "SCK" : "https://www.mgm.gov.tr/Images_Sys/hadiseler/SCK.svg",
+    "SGK" : "https://www.mgm.gov.tr/Images_Sys/hadiseler/SGK.svg",
+    "HHY" : "https://www.mgm.gov.tr/Images_Sys/hadiseler/HHY.svg",
+};
+
+// haritada fazla sayıda marker bulunacağı için hepsi bir katmanda toplanıp haritaya eklendi
+var markersLayer = new L.LayerGroup();
+map.addLayer(markersLayer);
+
+
+
+
+// işin ağırlıklı kısmını bu fonksiyon yapıyor, 
+// ilk olarak bölge istasyonlarına "marker"  ekliyor,
+// 'marker'larda bulunan fonksiyon son durumları çekecek şekilde ayarlandı; 
+// alternatif olarak 5 günlük tahminleri çekip, hadise, maks min sıcaklıklar da gösterilebilir
+// her marker için hava durumunu gösteren simgeden marker icon L.icon yaratılması düşünülebilir 
+// veya harita kontrol kısmında son durumlar ve 5 günlük tahmin şeklinde iki farklı harita oluşutulabilir
+
+var info = L.control();
+
+	info.onAdd = function (map) {
+		this._div = L.DomUtil.create('div', 'info');
+		this.update();
+		return this._div;
+	};
+
+	info.update = function (props) {
+        
+		this._div.innerHTML = '<div><h4>5 Günlük Hava Tahmini ' +  (props ?  props.il +'</h4>'
+            + '<div style="float:left; margin:5px; padding:5px;">' +props.enYuksekGun1 + ' °C <br>'+'<img  src="' + hadiseresim[props.hadiseGun1] + '">'+'<br>'+ props.hadiseGun1 + '<br>'+ props.enDusukGun1 +' °C </div>'
+            +'<div style="float:left; margin:5px; padding:5px;">' +props.enYuksekGun2 + ' °C <br>' +'<img  src="' + hadiseresim[props.hadiseGun2] + '">'+ '<br>'+ props.hadiseGun2 + '<br>'+ props.enDusukGun2 +' °C </div>'
+            +'<div style="float:left; margin:5px; padding:5px;">' +props.enYuksekGun3 + ' °C <br>'  +'<img  src="' + hadiseresim[props.hadiseGun3] + '">'+ '<br>'+ props.hadiseGun3 + '<br>'+ props.enDusukGun3 +' °C </div>'
+            +'<div style="float:left; margin:5px; padding:5px;">' +props.enYuksekGun4 + ' °C <br>' +'<img  src="' + hadiseresim[props.hadiseGun4] + '">'+ '<br>'+ props.hadiseGun4 + '<br>'+ props.enDusukGun4 +' °C </div>'
+            +'<div style="float:left; margin:5px; padding:5px;">' +props.enYuksekGun5 + ' °C <br>' +'<img  src="' + hadiseresim[props.hadiseGun5] + '">'+ '<br>'+ props.hadiseGun5 + '<br>'+ props.enDusukGun5 +' °C </div>'
+			: '</h4>İstasyon Seçiniz') +'</div>';
+	};
+
+	info.addTo(map);
+
+    var obj={};    
+for (var i = 0; i < iller.length; i++) {
+var	marker = new L.marker([iller[i][1],iller[i][2]]).bindPopup(iller[i][0]).addTo(markersLayer);
+        //.bindPopup('<a href="https://servis.mgm.gov.tr/api/tahminler/gunluk?istno=' + iller[i][3] + '" target="_blank">' + iller[i][0] + '</a>')
+        //.addTo(markersLayer);
+    
+marker.on('mouseover', function (e) {
+        this.openPopup();
+        });
+
+
+
+marker.on('click', function (e) {
+    // var txt = this._popup.getContent();
+    // console.log(txt)
+    var popup = this._popup;
+    var content = popup.getContent();
+    for (var i=0; i<iller.length; i++){
+        if(content ===iller[i][0]){
+            var id = iller[i][3];
+            obj.il = iller[i][0];
+            var url ="https://servis.mgm.gov.tr/api/tahminler/gunluk?istno=" +id;
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                // Typical action to be performed when the document is ready:
+                var data = JSON.parse(xhttp.responseText);
+               if(data){
+                obj.hadiseGun1 = data[0].hadiseGun1;
+                obj.hadiseGun2 = data[0].hadiseGun2;
+                obj.hadiseGun3 = data[0].hadiseGun3;
+                obj.hadiseGun4 = data[0].hadiseGun4;
+                obj.hadiseGun5 = data[0].hadiseGun5;
+                obj.enDusukGun1 = data[0].enDusukGun1;
+                obj.enDusukGun2 = data[0].enDusukGun2;
+                obj.enDusukGun3 = data[0].enDusukGun3;
+                obj.enDusukGun4 = data[0].enDusukGun4;
+                obj.enDusukGun5 = data[0].enDusukGun5;
+                obj.enYuksekGun1 = data[0].enYuksekGun1;
+                obj.enYuksekGun2 = data[0].enYuksekGun2;
+                obj.enYuksekGun3 = data[0].enYuksekGun3;
+                obj.enYuksekGun4 = data[0].enYuksekGun4;
+                obj.enYuksekGun5 = data[0].enYuksekGun5;
+                info.update(obj);
+               }
+                }
+            };
+            xhttp.open("GET", url, true);
+            xhttp.send();        
+        }
+    }
+});
+}
+
+</script>
+
+</body>
+</html>
